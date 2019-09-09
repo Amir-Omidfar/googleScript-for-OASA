@@ -1,2 +1,3 @@
 # googleScript-for-OASA
-This is google script code to automate our google sheet reading for UCLA OASA office 
+This is google script code to automate our google sheet reading for UCLA OASA office.
+This code let the user input course info and based on the given information creates a draft to contact the related professor for course evaluation purposes. More to come...
