@@ -1,0 +1,189 @@
+function moveToCompleted(){
+  var rowNumber = Browser.inputBox('Enter the row number');
+  var sampleSheet = SpreadsheetApp.getActiveSpreadsheet ();
+  var engrC = sampleSheet.getSheetByName("Engineering Courses rev2")
+  rowNumber=Number(rowNumber)
+  var source = engrC.getRange (rowNumber,1,1,17);
+  var destSheet = sampleSheet.getSheetByName("Completed-Engineering rev 2");
+  var destRange = destSheet.getRange(destSheet.getLastRow()+1,1);
+  source.copyTo (destRange/*, {contentsOnly: true}*/);
+  source.clear ();
+  engrC.deleteRow(rowNumber);
+}
+
+
+
+function ticketEmail() {
+  
+  var sampleSheet = SpreadsheetApp.getActive();
+  //var sh = sampleSheet.getSheets()[0]
+  var engrC = sampleSheet.getSheetByName("Engineering Courses rev2")
+  var emailSh = sampleSheet.getSheetByName("Course Info")
+  var emailTemp = sampleSheet.getSheetByName("EmailTemplate")
+  
+  var rowNumber = Browser.inputBox('Enter the row number');
+  var duration = Browser.inputBox('Enter the Evaluation duration');
+  //var style = SpreadsheetApp.newTextStyle()
+  //style[DocumentApp.Attribute.BOLD] = true;
+  
+  //var lrow = engrC.getLastRow();   // User which last filled the form
+  var lrow=+rowNumber;
+  
+  var UID = engrC.getRange(lrow, 1).getValue();      
+  var school = engrC.getRange(lrow, 2).getValue();
+  var courseTitle = engrC.getRange(lrow, 3).getValue();
+  var courseNumber = engrC.getRange(lrow, 4).getValue();
+  var qUnits = engrC.getRange(lrow, 5).getValue();
+  var uclaDept = engrC.getRange(lrow,7).getValue();
+  var uclaCrsN = engrC.getRange(lrow,8).getValue();
+  
+  
+  var emailBody=emailTemp.getRange("B16").getValue();
+  
+  var nextLine = emailTemp.getRange("B18").getValue();
+  nextLine= nextLine.replace("{courseTitle}",courseTitle);
+  nextLine= nextLine.replace("{courseNumber}",courseNumber);
+  nextLine= nextLine.replace("{school}",school);
+  nextLine= nextLine.replace("{uclaCrsN}",uclaCrsN);
+  nextLine = nextLine.replace("{uclaDept}",uclaDept);
+  nextLine= nextLine.replace("{UID}",UID);
+  //nextLine.getText();
+  emailBody=emailBody+"\n"+"\n"+nextLine;
+  
+  var nextLine = emailTemp.getRange("B19").getValue();
+  nextLine= nextLine.replace("{duration}",duration);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  var nextLine = emailTemp.getRange("B21").getValue();
+  emailBody=emailBody+"\n"+"\n"+nextLine;
+  
+  var saitEmail="sait@uclanet.ucla.edu"
+  var emailSubject = " "
+  var aliases = GmailApp.getAliases();
+  GmailApp.createDraft(saitEmail, emailSubject, emailBody,{'from': aliases[0], 'cc': aliases[0] });
+
+}
+
+
+
+
+function googleFormCreator() {
+  
+  // Change it to your name here 
+  var yourName=''
+  
+  var sampleSheet = SpreadsheetApp.getActive();
+  //var sh = sampleSheet.getSheets()[0]
+  var engrC = sampleSheet.getSheetByName("Engineering Courses rev2")
+  var emailSh = sampleSheet.getSheetByName("Course Info")
+  var emailTemp = sampleSheet.getSheetByName("EmailTemplate")
+  
+  var rowNumber = Browser.inputBox('Enter the row number');
+  
+  
+  //var lrow = engrC.getLastRow();   // User which last filled the form
+  var lrow=+rowNumber;
+  
+  var UID = engrC.getRange(lrow, 1).getValue();      
+  var school = engrC.getRange(lrow, 2).getValue();
+  var courseTitle = engrC.getRange(lrow, 3).getValue();
+  var courseNumber = engrC.getRange(lrow, 4).getValue();
+  var qUnits = engrC.getRange(lrow, 5).getValue();
+  var uclaDept = engrC.getRange(lrow,7).getValue();
+  var uclaCrsN = engrC.getRange(lrow,8).getValue();
+  
+  //Getting the Professor's information  
+  
+  var pName = engrC.getRange(lrow,9).getValue();
+  var values= emailSh.getDataRange().getValues();
+  var pEmail= "";
+  
+  for(var i=1, iLen=values.length; i<iLen; i++) {
+    if (values[i][1] == pName && values[i][2] != "")
+    {
+      pEmail=values[i][2];
+      }
+     
+  }    
+  //engrC.appendRow([pName,pEmail])
+  
+  
+  
+  
+  
+  //Create the email with google form and attach the syllabus
+  
+  var formTitle = emailTemp.getRange(2,2).getValue();
+  formTitle = formTitle.replace("{uclaDept}",uclaDept);
+  formTitle = formTitle.replace("{uclaCrsN}",uclaCrsN);
+  formTitle = formTitle.replace("{school}",school);
+  formTitle = formTitle.replace("{courseNumber}",courseNumber);
+  formTitle = formTitle.replace("{courseTitle}",courseTitle);
+  var form=FormApp.create(formTitle)
+  
+  var question = form.addMultipleChoiceItem();
+  //question.setTitle('Course Number: '+ courseNumber);
+  //question.setTitle('Course Title:' + courseTitle);
+  //question.setTitle('College:' + school);
+  //question.setTitle('Quarter Units:'+ qUnits);
+  question.setTitle('Would you accept this evaluation?');
+  question.setChoices([question.createChoice('Yes'),
+    question.createChoice('No'),
+      question.createChoice('More Information needed')]);
+  var comments = form.addParagraphTextItem();
+  comments.setTitle('If the course is not equivalent, or more information needed, please specifically let us know.')
+  //Logger.log('Published URL: ' + form.getPublishedUrl());
+  //Logger.log('Editor URL: ' + form.getEditUrl()); 
+  //link=form.getPublishedUrl();             
+  link=""
+  
+  var emailSubject=formTitle
+  var emailBody=emailTemp.getRange("B3").getValue();
+  emailBody= emailBody.replace("{pName}",pName);
+  
+  var nextLine=emailTemp.getRange("B4").getValue();
+  emailBody=emailBody+"\n\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B5").getValue();
+  nextLine= nextLine.replace("{courseNumber}",courseNumber);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B6").getValue();
+  nextLine=nextLine.replace("{courseTitle}",courseTitle);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B7").getValue();
+  nextLine=nextLine.replace("{school}",school);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B8").getValue();
+  nextLine=nextLine.replace("{qUnits}",qUnits);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B9").getValue();
+  emailBody=emailBody+"\n \n"+nextLine;
+  
+  
+  
+  nextLine = emailTemp.getRange("B10").getValue();
+  nextLine= nextLine.replace("{courseNumber}",uclaCrsN);
+  nextLine= nextLine.replace("{uclaDept}",uclaDept);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B11").getValue();
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B12").getValue();
+  emailBody=emailBody+"\n \n"+nextLine;
+  
+  emailBody=emailBody+"\n"+yourName;
+  
+  //ToDO:
+  //var link= to add the link 
+  //link = setLinkURL(link)
+  emailBody=emailBody+"\n \n"+link;
+  
+  var aliases = GmailApp.getAliases();
+  GmailApp.createDraft(pEmail, emailSubject, emailBody,{'from': aliases[0], 'cc': aliases[0] });
+  
+}
