@@ -1,0 +1,260 @@
+//Created by Amirali Omidfar 7/22/2019
+
+/*
+function listUpdate(){
+ 
+  var sampleSheet = SpreadsheetApp.getActiveSpreadsheet ();
+  var engrC = sampleSheet.getSheetByName("Engineering Courses rev2")
+  var lastRow=engrC.getLastRow();
+  
+  var dataRange = engrC.getDataRange();
+  var values=dataRange.getValues();
+  var i = 1;
+  Logger.log(values[3][13]);
+  while (i < 65)
+  {
+    var now = new Date();
+    if((now - values[i][13]) > 14 )
+    {engrC.getRange(i, 1, 1, 18).setFontWeight("Bold");
+    }
+   i++;
+  }
+  
+}
+*/
+
+
+
+function moveToCompleted(){
+  var rowNumber = Browser.inputBox('Enter the row number');
+  var sampleSheet = SpreadsheetApp.getActiveSpreadsheet ();
+  var engrC = sampleSheet.getSheetByName("Engineering Courses rev2")
+  rowNumber=Number(rowNumber)
+  var source = engrC.getRange (rowNumber,1,1,21);
+  var destSheet = sampleSheet.getSheetByName("Completed-Engineering rev 2");
+  var destRange = destSheet.getRange(destSheet.getLastRow()+1,1);
+  source.copyTo (destRange/*, {contentsOnly: true}*/);
+  source.clear ();
+  engrC.deleteRow(rowNumber);
+}
+
+
+
+function ticketEmail() {
+  
+  var sampleSheet = SpreadsheetApp.getActive();
+  //var sh = sampleSheet.getSheets()[0]
+  var engrC = sampleSheet.getSheetByName("Engineering Courses rev2")
+  var emailSh = sampleSheet.getSheetByName("Course Info")
+  var emailTemp = sampleSheet.getSheetByName("EmailTemplate")
+  
+  var rowNumber = Browser.inputBox('Enter the row number');
+  var duration = Browser.inputBox('Enter the Evaluation duration');
+  //var style = SpreadsheetApp.newTextStyle()
+  //style[DocumentApp.Attribute.BOLD] = true;
+  
+  //var lrow = engrC.getLastRow();   // User which last filled the form
+  var lrow=+rowNumber;
+  
+  var UID = engrC.getRange(lrow, 1).getValue();      
+  var school = engrC.getRange(lrow, 2).getValue();
+  var courseTitle = engrC.getRange(lrow, 3).getValue();
+  var courseNumber = engrC.getRange(lrow, 4).getValue();
+  var qUnits = engrC.getRange(lrow, 5).getValue();
+  var uclaDept = engrC.getRange(lrow,7).getValue();
+  var uclaCrsN = engrC.getRange(lrow,8).getValue();
+  
+  
+  var emailBody=emailTemp.getRange("B16").getValue();
+  
+  var nextLine = emailTemp.getRange("B18").getValue();
+  nextLine= nextLine.replace("{courseTitle}",courseTitle);
+  nextLine= nextLine.replace("{courseNumber}",courseNumber);
+  nextLine= nextLine.replace("{school}",school);
+  nextLine= nextLine.replace("{uclaCrsN}",uclaCrsN);
+  nextLine = nextLine.replace("{uclaDept}",uclaDept);
+  nextLine= nextLine.replace("{UID}",UID);
+  //nextLine.getText();
+  emailBody=emailBody+"\n"+"\n"+nextLine;
+  
+  var nextLine = emailTemp.getRange("B19").getValue();
+  nextLine= nextLine.replace("{duration}",duration);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  var nextLine = emailTemp.getRange("B21").getValue();
+  emailBody=emailBody+"\n"+"\n"+nextLine;
+  
+  var saitEmail="sait@uclanet.ucla.edu"
+  var emailSubject =" "
+  var aliases = GmailApp.getAliases();
+  GmailApp.createDraft(saitEmail, emailSubject, emailBody,{'from': "course_eval@seas.ucla.edu", 'cc': "course_eval@seas.ucla.edu" });
+  //make a draft on new forwarding email
+  
+  /*
+  var subjectID = uclaDept+" "+uclaCrsN+" "+"Evaluation Request for"+" "+school+" "+courseTitle+" "+courseNumber;
+  var threads = GmailApp.search(subjectID);
+  Logger.log('Subject: '+subjectID);
+  Logger.log('thread length: '+threads.length)
+  
+  var thread=threads[0];
+  Logger.log("NUMBER OF MSGS"+thread.getMessageCount());
+  //var msgs = GmailApp.getMessagesForThreads(threads);
+  var messages = thread.getMessages();
+  if (messages)
+  {
+    messages[messages.length-1].forward("sait@uclanet.ucla.edu",{from: 'course_eval@seas.ucla.edu' , cc: 'course_eval@seas.ucla.edu', htmlBody: emailBody})
+  
+  }
+*/
+}
+
+
+function googleFormCreator() {
+  
+  // Change it to your name here 
+  var yourName=''
+  
+  var sampleSheet = SpreadsheetApp.getActive();
+  //var sh = sampleSheet.getSheets()[0]
+  var engrC = sampleSheet.getSheetByName("Engineering Courses rev2")
+  var emailSh = sampleSheet.getSheetByName("Course Info")
+  var emailTemp = sampleSheet.getSheetByName("EmailTemplate")
+  
+  var rowNumber = Browser.inputBox('Enter the row number');
+  
+  
+  //var lrow = engrC.getLastRow();   // User which last filled the form
+  var lrow=+rowNumber;
+  
+  var UID = engrC.getRange(lrow, 1).getValue();      
+  var school = engrC.getRange(lrow, 2).getValue();
+  var courseTitle = engrC.getRange(lrow, 3).getValue();
+  var courseNumber = engrC.getRange(lrow, 4).getValue();
+  var qUnits = engrC.getRange(lrow, 5).getValue();
+  var uclaDept = engrC.getRange(lrow,7).getValue();
+  var uclaCrsN = engrC.getRange(lrow,8).getValue();
+  
+  //Getting the Professor's information  
+  
+  var pName = engrC.getRange(lrow,9).getValue();
+  var values= emailSh.getDataRange().getValues();
+  var pEmail= "";
+  
+  for(var i=1, iLen=values.length; i<iLen; i++) {
+    if (values[i][1] == pName && values[i][2] != "")
+    {
+      pEmail=values[i][2];
+      }
+     
+  }    
+  //engrC.appendRow([pName,pEmail])
+  
+  
+  
+  
+  
+  //Create the email with google form and attach the syllabus
+  
+  var formTitle = emailTemp.getRange(2,2).getValue();
+  formTitle = formTitle.replace("{uclaDept}",uclaDept);
+  formTitle = formTitle.replace("{uclaCrsN}",uclaCrsN);
+  formTitle = formTitle.replace("{school}",school);
+  formTitle = formTitle.replace("{courseNumber}",courseNumber);
+  formTitle = formTitle.replace("{courseTitle}",courseTitle);
+  var form=FormApp.create(formTitle)
+  
+  var question = form.addMultipleChoiceItem();
+  //question.setTitle('Course Number: '+ courseNumber);
+  //question.setTitle('Course Title:' + courseTitle);
+  //question.setTitle('College:' + school);
+  //question.setTitle('Quarter Units:'+ qUnits);
+  question.setTitle('Would you accept this evaluation?');
+  question.setChoices([question.createChoice('Yes'),
+  question.createChoice('No'),
+  question.createChoice('More Information needed')]);
+  var comments = form.addParagraphTextItem();
+  comments.setTitle('If the course is not equivalent, or more information needed, please specifically let us know.')
+  //Logger.log('Published URL: ' + form.getPublishedUrl());
+  //Logger.log('Editor URL: ' + form.getEditUrl()); 
+  //link=form.getPublishedUrl();             
+  
+  
+  var emailSubject=formTitle
+  var emailBody=emailTemp.getRange("B3").getValue();
+  emailBody= emailBody.replace("{pName}",pName);
+  
+  var nextLine=emailTemp.getRange("B4").getValue();
+  emailBody=emailBody+"\n\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B5").getValue();
+  nextLine= nextLine.replace("{courseNumber}",courseNumber);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B6").getValue();
+  nextLine=nextLine.replace("{courseTitle}",courseTitle);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B7").getValue();
+  nextLine=nextLine.replace("{school}",school);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B8").getValue();
+  nextLine=nextLine.replace("{qUnits}",qUnits);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B9").getValue();
+  emailBody=emailBody+"\n \n"+nextLine;
+  
+  
+  
+  nextLine = emailTemp.getRange("B10").getValue();
+  nextLine= nextLine.replace("{courseNumber}",uclaCrsN);
+  nextLine= nextLine.replace("{uclaDept}",uclaDept);
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B11").getValue();
+  emailBody=emailBody+"\n"+nextLine;
+  
+  nextLine = emailTemp.getRange("B12").getValue();
+  emailBody=emailBody+"\n \n"+nextLine;
+  
+  emailBody=emailBody+"\n"+yourName;
+  
+  //ToDO:
+  //var link= to add the link 
+  //link = setLinkURL(link)
+  
+  emailBody=emailBody+"\n \n";
+  //emailBody=emailBody+<iframe src="
+  //emailBody=emailBody+link;
+  //emailBody=emailBody+?embedded=true" width="700" height="520" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>;
+  
+  var EmbedLink = '<iframe src="link" width="640" height="711" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>';
+  var aliases = GmailApp.getAliases();
+  GmailApp.createDraft(pEmail, emailSubject, emailBody,{'from': "course_eval@seas.ucla.edu", 'cc': "course_eval@seas.ucla.edu"});
+  
+}
+
+
+
+
+
+// Automatic timestamp for "Return" and "Ticket" columns.
+function onEdit(e){
+    var sh2 = e.source.getActiveSheet();
+  if (sh2.getName() == "Engineering Courses rev2" && e.range.columnStart == 10) {
+  e.range.offset(0, 5).setValue(new Date())
+  e.range.offset(0, 6).setValue(e.value === "Yes" ? new Date() : null)
+  }
+  else if (sh2.getName() == "Engineering Courses rev2" && e.range.columnStart == 1) {
+  e.range.offset(0,12).setValue(new Date())
+  e.range.offset(0,13).setValue(new Date())
+  }
+}
+
+  
+
+
+
+
+
